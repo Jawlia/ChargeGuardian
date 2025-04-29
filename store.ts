@@ -10,13 +10,7 @@ import {
   REGISTER,
 } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {combineReducers} from '@reduxjs/toolkit';
-// import themeReducer from './themeSlice';
-import themeSlice from './src/store/slices/themeSlice';
-
-const rootReducer = combineReducers({
-  theme: themeSlice,
-});
+import rootReducer from './src/store/rootReducer';
 
 const persistConfig = {
   key: 'root',

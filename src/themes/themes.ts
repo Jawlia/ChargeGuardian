@@ -17,6 +17,8 @@ export type themeColorType = typeof MD3LightTheme.colors & {
   menuColor: string;
   heraderInfoIcon: string;
   trackColor: string;
+  disabledBadgeBackground: string;
+  disabledBadgeText: string;
 };
 
 interface ThemeBase {
@@ -76,6 +78,8 @@ export const LightTheme = {
     menuColor: '#000',
     heraderInfoIcon: customColors?.primary,
     trackColor: customColors?.primary,
+    disabledBadgeBackground: '#B0B0B0',
+    disabledBadgeText: '#f8f8f8',
   },
   fonts: MD3LightTheme.fonts, // 👈 ADD THIS LINE
   spacing,
@@ -107,6 +111,8 @@ export const DarkTheme = {
     menuColor: '#f8f8f8',
     heraderInfoIcon: '#f8f8f8',
     trackColor: '#f8f8f8',
+    disabledBadgeBackground: '#B0B0B0',
+    disabledBadgeText: '#f8f8f8',
   },
   fonts: MD3DarkTheme.fonts,
 

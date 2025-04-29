@@ -5,7 +5,9 @@ import CustomSlider from '../../components/CustomSlider';
 import {View, ScrollView, StyleSheet} from 'react-native';
 import useAppTheme from '../../services/hooks/useAppTheme';
 import {Text, Card, Portal, Modal} from 'react-native-paper';
+import {useAppDispatch, useAppSelector} from '../../hooks/hooks';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import useBatteryStatus from '../../services/hooks/useBatteryStatus';
 import BatteryLottieGauge from '../../components/BatteryLottieGauge';
 
 const BatteryInfoCard = ({
@@ -33,13 +35,29 @@ const BatteryInfoCard = ({
   </View>
 );
 
+const getTemperatureStatus = (temp: number, t: any): string => {
+  if (temp < 10) return t('low');
+  if (temp > 40) return t('high');
+  return t('normal');
+};
+
 const HomeScreen = ({navigation}: any) => {
+  useAppDispatch();
+  useBatteryStatus();
   const {t} = useTranslation();
   const {colors, isDark} = useAppTheme();
   const [showTips, setShowTips] = useState(false);
   const [lowAlarmValue, setLowAlarmValue] = useState(10);
   const [isLowAlarmEnabled, setIsLowAlarmEnabled] = useState(true);
   const [fullChargeAlarmValue, setFullChargeAlarmValue] = useState(100);
+  const {
+    isCharging,
+    batteryLevel,
+    batteryTemprature,
+    batteryHealth,
+    batteryCapecity,
+    batteryTechnology,
+  } = useAppSelector(state => state.battery);
   const [isFullChargeAlarmEnabled, setIsFullChargeAlarmEnabled] =
     useState(true);
 
@@ -74,47 +92,61 @@ const HomeScreen = ({navigation}: any) => {
             <View
               style={[
                 styles.statusBadge,
-                {backgroundColor: colors.badgeBackground},
+                {
+                  backgroundColor: isCharging
+                    ? colors.badgeBackground
+                    : colors.disabledBadgeBackground,
+                },
               ]}>
-              <Text style={[styles.statusText, {color: colors.badgeText}]}>
-                {t('charging')}
+              <Text
+                style={[
+                  styles.statusText,
+                  {
+                    color: isCharging
+                      ? colors.badgeText
+                      : colors.disabledBadgeText,
+                  },
+                ]}>
+                {isCharging ? t('charging') : t('notCharging')}
               </Text>
             </View>
           </View>
 
           <View style={styles.batteryGauge}>
-            <BatteryLottieGauge percentage={70} />
+            <BatteryLottieGauge percentage={Math.round(batteryLevel * 100)} />
           </View>
 
           <View style={styles.infoGrid}>
             <BatteryInfoCard
               icon="thermometer"
-              label="Temperature"
-              value="28°C (Normal)"
+              label={t('temperature')}
+              value={`${Math.round(batteryTemprature)}°C (${getTemperatureStatus(batteryTemprature, t)})`}
               color={colors.heatAlert}
               position={1}
               colors={colors}
             />
             <BatteryInfoCard
               icon="heart-pulse"
-              label="Health"
-              value="Good (92%)"
+              label={t('health')}
+              value={t(`${batteryHealth?.replace(/\s+/g, '')?.toLowerCase()}`)}
               color={colors.greenHealth}
               position={2}
               colors={colors}
             />
             <BatteryInfoCard
               icon="chip"
-              label="Technology"
-              value="Li-ion"
+              label={t('technology')}
+              value={t(
+                `${batteryTechnology}`?.replace(/-/g, '')?.toLowerCase(),
+              )}
               color={colors.primary}
               position={3}
               colors={colors}
             />
             <BatteryInfoCard
               icon="battery-charging-100"
-              label="Capacity"
-              value={`3850 / 4000${t('mah')}`}
+              label={t('capacity')}
+              value={`${batteryCapecity} ${t('mah')}`}
               color={colors.batteryCapecity}
               position={4}
               colors={colors}
