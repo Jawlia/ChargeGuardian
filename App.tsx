@@ -18,6 +18,7 @@ import {
   DefaultTheme as NavigationDefaultTheme,
   DarkTheme as NavigationDarkTheme,
 } from '@react-navigation/native';
+import ChargeSettingsScreen from './src/screens/Settings/ChargeSettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,7 +46,10 @@ function AppNavigator() {
           <Stack.Navigator
             initialRouteName="GetStarted"
             screenOptions={{
-              headerTitleStyle: headerTitleStyle,
+              headerTitleStyle: {
+                ...headerTitleStyle,
+                color: theme.colors.text,
+              },
               headerTintColor: theme.colors.primary,
             }}>
             <Stack.Screen
@@ -58,6 +62,11 @@ function AppNavigator() {
               component={DrawerNavigator}
               options={{headerShown: false}}
             />
+            {/* <Stack.Screen
+              name="ChargeSettings"
+              component={ChargeSettingsScreen}
+              options={{title: 'Alarm Settings'}}
+            /> */}
           </Stack.Navigator>
         </NavigationContainer>
       </I18nextProvider>

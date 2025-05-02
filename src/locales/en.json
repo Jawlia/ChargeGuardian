@@ -44,5 +44,13 @@
   "liion": "Li-ion",
   "nimh": "NiMH",
   "lifepO4": "LiFePO4",
-  "pbacid": "Pb-acid"
+  "pbacid": "Pb-acid",
+  "chargeAlarmDetailedDesc": "Get notified instantly when your phone reaches full charge to avoid overcharging and preserve battery health. Customize alert tone, vibration, and repeat options.",
+  "enableAndSetAlarm": "Enable and Set Alarm",
+  "ringtone": "Ringtone",
+  "ringtoneDesc": "Customize tone for charge alerts in your style.",
+  "volume": "Volume",
+  "vibration": "Vibration",
+  "repeatAlert": "Repeat Alert",
+  "repeatAlertDesc": "Replays alarm until charger {{type}}."
 }

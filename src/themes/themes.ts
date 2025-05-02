@@ -19,6 +19,8 @@ export type themeColorType = typeof MD3LightTheme.colors & {
   trackColor: string;
   disabledBadgeBackground: string;
   disabledBadgeText: string;
+  card: string;
+  disabledText: string;
 };
 
 interface ThemeBase {
@@ -80,6 +82,15 @@ export const LightTheme = {
     trackColor: customColors?.primary,
     disabledBadgeBackground: '#B0B0B0',
     disabledBadgeText: '#f8f8f8',
+    card: '#FFFFFF',
+    warning: 'rgb(237, 215, 95)',
+    description: 'rgba(0,0,0,0.4)',
+    iconFull: '#4CAF50',
+    iconLow: '#F44336',
+    iconTheft: '#FFEB3B',
+    iconTemp: '#FF5722',
+    iconGeneral: '#4763f7',
+    disabledText: 'rgba(0, 0, 0, 0.4)',
   },
   fonts: MD3LightTheme.fonts, // 👈 ADD THIS LINE
   spacing,
@@ -113,6 +124,15 @@ export const DarkTheme = {
     trackColor: '#f8f8f8',
     disabledBadgeBackground: '#B0B0B0',
     disabledBadgeText: '#f8f8f8',
+    card: '#1E1E1E',
+    warning: '#f1e08a',
+    description: 'rgba(255,255,255,0.5)',
+    iconFull: '#505ECE',
+    iconLow: '#505ECE',
+    iconTheft: '#505ECE',
+    iconTemp: '#505ECE',
+    iconGeneral: '#505ECE',
+    disabledText: 'rgba(255, 255, 255, 0.4)',
   },
   fonts: MD3DarkTheme.fonts,
 

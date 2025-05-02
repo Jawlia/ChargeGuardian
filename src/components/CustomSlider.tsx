@@ -3,10 +3,12 @@ import {spacing} from '../themes/themes';
 import {Text, Switch} from 'react-native-paper';
 import useAppTheme from '../services/hooks/useAppTheme';
 import {Slider} from '@miblanchard/react-native-slider';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 import {View, StyleSheet, TouchableOpacity} from 'react-native';
 
 type CustomStyledSliderProps = {
   header: string;
+  isType2?: boolean;
   alarmValue: number;
   subHeader?: string;
   isAlarmOn: boolean;
@@ -29,27 +31,31 @@ const CustomStyledSlider = (props: CustomStyledSliderProps) => {
   return (
     <View style={[styles.container, {backgroundColor: colors.surface}]}>
       {/* Row with Label and Switch */}
-      <View style={styles.row}>
-        <Text
-          style={[
-            styles.alarmTitle,
-            {
-              color: props.isAlarmOn
-                ? colors.onSurface
-                : colors.onSurfaceDisabled,
-            },
-          ]}>
-          {props.header}
-        </Text>
-        <Switch
-          value={props.isAlarmOn}
-          onValueChange={toggleSwitch}
-          thumbColor={props.isAlarmOn ? colors.primary : colors.outline}
-          trackColor={{false: colors.outline, true: colors.primaryContainer}}
-        />
-      </View>
+      {props?.isType2 ? null : (
+        <View style={styles.row}>
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <Text
+              style={[
+                styles.alarmTitle,
+                {
+                  color: props.isAlarmOn
+                    ? colors.onSurface
+                    : colors.onSurfaceDisabled,
+                },
+              ]}>
+              {props.header}
+            </Text>
+          </View>
+          <Switch
+            value={props.isAlarmOn}
+            onValueChange={toggleSwitch}
+            thumbColor={props.isAlarmOn ? colors.primary : colors.outline}
+            trackColor={{false: colors.outline, true: colors.primaryContainer}}
+          />
+        </View>
+      )}
 
-      {props?.subHeader && (
+      {props?.subHeader && !props?.isType2 && (
         <Text
           style={[
             styles.alarmSubtitle,
@@ -105,6 +111,7 @@ const CustomStyledSlider = (props: CustomStyledSliderProps) => {
       />
 
       {/* Value */}
+
       <Text
         style={[
           styles.valueText,
@@ -162,6 +169,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
     marginTop: 8,
+  },
+  valueTextRight: {
+    fontSize: 12,
+    marginLeft: spacing.xs,
+    textAlign: 'right',
+    fontWeight: '600',
+    marginTop: -10,
   },
   alarmTitle: {
     fontSize: 14,

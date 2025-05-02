@@ -7,7 +7,6 @@ const rootReducer = combineReducers({
   settings: settingsReducer,
   battery: batterySlice,
   theme: themeSlice,
-  // yaha baaki ke slice add karte jayenge jaise auth, alarm etc.
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

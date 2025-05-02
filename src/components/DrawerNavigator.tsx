@@ -6,6 +6,7 @@ import {View, Text, StyleSheet} from 'react-native';
 import useAppTheme from '../services/hooks/useAppTheme';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import CustomDrawerContent, {getDrawerIcon} from './CustomDrawerContent';
+import ChargeSettingsScreen from '../screens/Settings/ChargeSettingsScreen';
 
 const Drawer = createDrawerNavigator();
 const TAB_ROUTES = ['Home', 'Settings', 'Profile'];
@@ -35,7 +36,10 @@ export default function DrawerNavigator() {
         return {
           headerShown: !isTab,
           headerLeft: () => getHeaderLeft({route, navigation}),
-          headerTitleStyle: headerTitleStyle,
+          headerTitleStyle: {
+            ...headerTitleStyle,
+            color: colors.text,
+          },
           headerStyle: {
             backgroundColor: colors.background,
           },
@@ -77,6 +81,12 @@ export default function DrawerNavigator() {
         options={{
           drawerIcon: data => getDrawerIcon(data, 'file-document-outline'),
         }}
+      />
+
+      <Drawer.Screen
+        name="ChargeSettings"
+        component={ChargeSettingsScreen}
+        options={{title: 'Alarm Settings'}}
       />
     </Drawer.Navigator>
   );

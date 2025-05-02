@@ -9,6 +9,10 @@ import {useAppDispatch, useAppSelector} from '../../hooks/hooks';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import useBatteryStatus from '../../services/hooks/useBatteryStatus';
 import BatteryLottieGauge from '../../components/BatteryLottieGauge';
+import {
+  updateFullChargeAlarm,
+  updateLowBatteryAlarm,
+} from '../../store/slices/settingsSlice';
 
 const BatteryInfoCard = ({
   icon,
@@ -42,14 +46,12 @@ const getTemperatureStatus = (temp: number, t: any): string => {
 };
 
 const HomeScreen = ({navigation}: any) => {
-  useAppDispatch();
+  const dispatch = useAppDispatch();
   useBatteryStatus();
   const {t} = useTranslation();
   const {colors, isDark} = useAppTheme();
   const [showTips, setShowTips] = useState(false);
-  const [lowAlarmValue, setLowAlarmValue] = useState(10);
-  const [isLowAlarmEnabled, setIsLowAlarmEnabled] = useState(true);
-  const [fullChargeAlarmValue, setFullChargeAlarmValue] = useState(100);
+
   const {
     isCharging,
     batteryLevel,
@@ -58,8 +60,13 @@ const HomeScreen = ({navigation}: any) => {
     batteryCapecity,
     batteryTechnology,
   } = useAppSelector(state => state.battery);
-  const [isFullChargeAlarmEnabled, setIsFullChargeAlarmEnabled] =
-    useState(true);
+
+  const fullAlarm = useAppSelector(
+    state => state.settings.fullChargeAlarm || {},
+  );
+  const lowAlarm = useAppSelector(
+    state => state.settings.lowBatteryAlarm || {},
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -168,10 +175,12 @@ const HomeScreen = ({navigation}: any) => {
             steps={[60, 70, 80, 90, 100]}
             sliderMinValue={60}
             sliderMaxValue={100}
-            isAlarmOn={isFullChargeAlarmEnabled}
-            setAlarm={setIsFullChargeAlarmEnabled}
-            alarmValue={fullChargeAlarmValue}
-            setAlarmValue={setFullChargeAlarmValue}
+            isAlarmOn={fullAlarm.isEnabled}
+            setAlarm={val => dispatch(updateFullChargeAlarm({isEnabled: val}))}
+            alarmValue={fullAlarm.alarmValue}
+            setAlarmValue={val =>
+              dispatch(updateFullChargeAlarm({alarmValue: val}))
+            }
           />
 
           <CustomSlider
@@ -180,10 +189,12 @@ const HomeScreen = ({navigation}: any) => {
             steps={[0, 10, 20, 30, 40, 50]}
             sliderMinValue={0}
             sliderMaxValue={50}
-            isAlarmOn={isLowAlarmEnabled}
-            setAlarm={setIsLowAlarmEnabled}
-            alarmValue={lowAlarmValue}
-            setAlarmValue={setLowAlarmValue}
+            isAlarmOn={lowAlarm.isEnabled}
+            setAlarm={val => dispatch(updateLowBatteryAlarm({isEnabled: val}))}
+            alarmValue={lowAlarm.alarmValue}
+            setAlarmValue={val =>
+              dispatch(updateLowBatteryAlarm({alarmValue: val}))
+            }
           />
         </Card.Content>
       </Card>

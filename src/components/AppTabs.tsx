@@ -55,7 +55,10 @@ export default function AppTabs() {
         tabBarIcon: getTabIcon(route.name),
         tabBarStyle: {backgroundColor: colors.background},
         headerStyle: {backgroundColor: colors.background},
-        headerTitleStyle: headerTitleStyle,
+        headerTitleStyle: {
+          ...headerTitleStyle,
+          color: colors.text,
+        },
       })}>
       <Tab.Screen
         name="Home"
