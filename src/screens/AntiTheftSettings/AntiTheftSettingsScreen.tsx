@@ -17,22 +17,27 @@ import {useAppDispatch, useAppSelector} from '../../hooks/hooks';
 import {updateAntiTheftSettings} from '../../store/slices/settingsSlice';
 import VolumeSlider from '../../components/VolumeSlider';
 import {ringtones} from '../../config/ringtones';
+import {RingtoneModal} from '../../components/RingtoneModal';
 
 const AntiTheftSettingsScreen = () => {
   const {colors} = useAppTheme();
   const {t} = useTranslation();
   const dispatch = useAppDispatch();
   const settings = useAppSelector(state => state.settings.antiTheft);
+  const [changePasswordModal, setChangePasswordModal] = useState(false);
+  const [isChangeMode, setIsChangeMode] = useState(false);
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [showRingtoneModal, setShowRingtoneModal] = useState(false);
 
+  // For first-time setup
   useEffect(() => {
     if (!settings.password || settings.password === 0) {
       setShowPasswordModal(true);
+      setIsChangeMode(false);
     }
-  }, []);
+  });
 
   const savePassword = () => {
     if (newPassword.length !== 4 || isNaN(Number(newPassword))) {
@@ -52,11 +57,17 @@ const AntiTheftSettingsScreen = () => {
       <Card style={[styles.card, {backgroundColor: colors.card}]}>
         <Card.Content>
           <Text style={styles.title}>{t('Anti-Theft Alarm')}</Text>
+          <Text style={[styles.descriptionText, {color: colors.description}]}>
+            Protect your phone from theft while charging. Alarm rings if
+            unplugged — only your password can stop it.
+          </Text>
 
           <View style={styles.rowBetween}>
             <View style={styles.rowLeft}>
               <Icon name="lock-alert" size={20} color={colors.primary} />
-              <Text style={styles.label}>{t('Enable Alarm')}</Text>
+              <Text style={[styles.sectionHeading, {color: colors.text}]}>
+                {t('Enable Alarm')}
+              </Text>
             </View>
             <Switch
               value={settings.isEnabled}
@@ -72,7 +83,9 @@ const AntiTheftSettingsScreen = () => {
           <View style={styles.rowBetween}>
             <View style={styles.rowLeft}>
               <Icon name="volume-high" size={20} color={colors.primary} />
-              <Text style={styles.label}>{t('Volume')}</Text>
+              <Text style={[styles.sectionHeading, {color: colors.text}]}>
+                {t('Volume')}
+              </Text>
             </View>
             <VolumeSlider
               value={settings.volume}
@@ -84,7 +97,9 @@ const AntiTheftSettingsScreen = () => {
           <View style={styles.rowBetween}>
             <View style={styles.rowLeft}>
               <Icon name="vibrate" size={20} color={colors.primary} />
-              <Text style={styles.label}>{t('Vibration')}</Text>
+              <Text style={[styles.sectionHeading, {color: colors.text}]}>
+                {t('Vibration')}
+              </Text>
             </View>
             <Switch
               value={settings.vibration}
@@ -100,7 +115,9 @@ const AntiTheftSettingsScreen = () => {
           <View style={styles.rowBetween}>
             <View style={styles.rowLeft}>
               <Icon name="repeat" size={20} color={colors.primary} />
-              <Text style={styles.label}>{t('Repeat')}</Text>
+              <Text style={[styles.sectionHeading, {color: colors.text}]}>
+                {t('Repeat')}
+              </Text>
             </View>
             <Switch
               value={settings.repeat}
@@ -114,15 +131,55 @@ const AntiTheftSettingsScreen = () => {
           </View>
 
           <TouchableOpacity
-            onPress={() => setShowRingtoneModal(true)}
-            style={styles.ringtoneSelector}>
-            <Text style={[styles.label, {color: colors.primary}]}>
-              {t('Ringtone')}
-            </Text>
-            <Text style={[styles.ringtoneName, {color: colors.text}]}>
-              {t(settings.ringtone)}
-            </Text>
+            style={styles.rowBetweenSubCard}
+            onPress={() => setShowRingtoneModal(true)}>
+            <View style={styles.limitedWidthBox}>
+              <View style={styles.rowLeft}>
+                <Icon
+                  name="bell-ring-outline"
+                  size={20}
+                  color={colors.iconGeneral}
+                />
+                <Text style={[styles.sectionHeading, {color: colors.text}]}>
+                  {t('ringtone')}
+                </Text>
+              </View>
+              <Text
+                style={[styles.descriptionText, {color: colors.description}]}>
+                {t('antiTheftRingtoneDesc')}{' '}
+                <Text
+                  style={[
+                    styles.selectedRingtoneText,
+                    {color: colors.primary},
+                  ]}>
+                  {t(settings.ringtone)}
+                </Text>
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={20} color={colors.description} />
           </TouchableOpacity>
+
+          <View style={styles.rowBetween}>
+            <View style={styles.rowLeft}>
+              <Icon
+                name="form-textbox-password"
+                size={20}
+                color={colors.primary}
+              />
+              <Text style={[styles.sectionHeading, {color: colors.text}]}>
+                {t('Password')}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => {
+                setShowPasswordModal(true);
+                setIsChangeMode(true);
+              }}>
+              <Text style={{color: colors.primary, fontWeight: '600'}}>
+                **** {t('Change')}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </Card.Content>
       </Card>
 
@@ -130,14 +187,14 @@ const AntiTheftSettingsScreen = () => {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, {backgroundColor: colors.card}]}>
             <Text style={[styles.modalTitle, {color: colors.text}]}>
-              Set 4-digit Password
+              {isChangeMode ? t('ChangePassword') : t('SetPassword')}
             </Text>
             <TextInput
               style={[
                 styles.input,
                 {borderColor: colors.primary, color: colors.text},
               ]}
-              placeholder="Enter password"
+              placeholder={t('Enter4DigitPassword')}
               keyboardType="numeric"
               maxLength={4}
               value={newPassword}
@@ -146,42 +203,33 @@ const AntiTheftSettingsScreen = () => {
             />
             <TouchableOpacity
               style={[styles.saveBtn, {backgroundColor: colors.primary}]}
-              onPress={savePassword}>
-              <Text style={{color: '#fff'}}>Save</Text>
+              onPress={() => {
+                if (newPassword.length !== 4 || isNaN(Number(newPassword))) {
+                  Alert.alert(t('Error'), t('InvalidPasswordAlert'));
+                  return;
+                }
+
+                dispatch(
+                  updateAntiTheftSettings({password: Number(newPassword)}),
+                );
+                setShowPasswordModal(false);
+                setNewPassword('');
+              }}>
+              <Text style={{color: '#fff'}}>
+                {isChangeMode ? t('Update') : t('Save')}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      <Portal>
-        <Modal
-          visible={showRingtoneModal}
-          onDismiss={() => setShowRingtoneModal(false)}
-          contentContainerStyle={[
-            styles.ringtoneModal,
-            {backgroundColor: colors.card},
-          ]}>
-          <Text style={[styles.modalTitle, {color: colors.text}]}>
-            {t('selectRingtone')}
-          </Text>
-          {ringtones.map((tone, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.ringtoneOption}
-              onPress={() => {
-                handleChange('ringtone', tone.labelKey);
-                setShowRingtoneModal(false);
-              }}>
-              <Text style={[styles.ringtoneText, {color: colors.text}]}>
-                {t(tone.labelKey)}
-              </Text>
-              {settings.ringtone === tone.labelKey && (
-                <Icon name="check" size={16} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-          ))}
-        </Modal>
-      </Portal>
+      <RingtoneModal
+        alarm={settings.ringtone}
+        ringtones={ringtones}
+        handleChangeRingtone={handleChange}
+        showRingtoneModal={showRingtoneModal}
+        setShowRingtoneModal={setShowRingtoneModal}
+      />
     </View>
   );
 };
@@ -191,7 +239,7 @@ export default AntiTheftSettingsScreen;
 const styles = StyleSheet.create({
   container: {flex: 1, padding: 16},
   card: {borderRadius: 16, marginBottom: 20},
-  title: {fontSize: 16, fontWeight: 'bold', marginBottom: 12},
+  title: {fontSize: 16, fontWeight: 'bold'},
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -232,19 +280,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 8,
   },
-  ringtoneModal: {
-    padding: 20,
-    margin: 20,
-    borderRadius: 16,
-  },
-  ringtoneOption: {
-    paddingVertical: 12,
-    borderBottomWidth: 0.5,
+  //aaa
+  descriptionText: {fontSize: 11, marginBottom: 16},
+
+  rowBetweenSubCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginVertical: 12,
   },
-  ringtoneText: {
+  sectionHeading: {
     fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+    marginBottom: 2,
+  },
+  limitedWidthBox: {maxWidth: '70%'},
+  selectedRingtoneText: {
+    fontWeight: '600',
   },
 });

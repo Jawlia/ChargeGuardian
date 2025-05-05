@@ -57,6 +57,7 @@
   "close": "Close",
   "cancel": "Cancel",
   "select": "Select",
+  "antiTheftRingtoneDesc": "Customize tone for anti theft alerts in your style.",
 
   "battery_full_english": "Battery Full (English)",
   "battery_full_hindi": "Battery Full (Hindi)",
@@ -82,5 +83,12 @@
   "ringtone_drum": "Drum",
   "ringtone_kontakt": "Kontakt",
   "ringtone_magical": "Magical",
-  "ringtone_ultra": "Ultra"
+  "ringtone_ultra": "Ultra",
+
+  "SetPassword": "Set 4-digit Password",
+  "ChangePassword": "Change 4-digit Password",
+  "Enter4DigitPassword": "Enter password",
+  "InvalidPasswordAlert": "Please enter a valid 4-digit number",
+  "Update": "Update",
+  "Save": "Save"
 }

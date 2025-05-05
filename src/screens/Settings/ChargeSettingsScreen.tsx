@@ -1,14 +1,6 @@
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  Switch,
-  StyleSheet,
-  TouchableOpacity,
-  NativeModules,
-  ScrollView,
-} from 'react-native';
-import {Button, Card, Modal, Portal} from 'react-native-paper';
+import {View, Text, Switch, StyleSheet, TouchableOpacity} from 'react-native';
+import {Card} from 'react-native-paper';
 import {useTranslation} from 'react-i18next';
 import {useAppDispatch, useAppSelector} from '../../hooks/hooks';
 import {
@@ -21,13 +13,13 @@ import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import VolumeSlider from '../../components/VolumeSlider';
 import CustomStyledSlider from '../../components/CustomSlider';
 import {ringtones} from '../../config/ringtones';
+import {RingtoneModal} from '../../components/RingtoneModal';
 
 const ChargeSettingsScreen = ({route}: any) => {
   const {type} = route.params;
   const {colors} = useAppTheme();
   const {t} = useTranslation();
   const dispatch = useAppDispatch();
-  const {BatteryModule} = NativeModules;
   const [showRingtoneModal, setShowRingtoneModal] = useState(false);
 
   const alarm = useAppSelector(state =>
@@ -36,7 +28,6 @@ const ChargeSettingsScreen = ({route}: any) => {
       : state.settings.lowBatteryAlarm,
   );
 
-  const [tempSelectedTone, setTempSelectedTone] = useState(alarm.ringtone);
   const handleChange = (field: string, value: any) => {
     const payload = {[field]: value};
     if (type === 'full') {
@@ -212,72 +203,14 @@ const ChargeSettingsScreen = ({route}: any) => {
       </Card>
 
       {/* Ringtone Modal */}
-      <Portal>
-        <Modal
-          visible={showRingtoneModal}
-          onDismiss={() => setShowRingtoneModal(false)}
-          contentContainerStyle={[
-            styles.ringtoneModal,
-            {backgroundColor: colors.card},
-          ]}>
-          <Text style={[styles.modalTitle, {color: colors.text}]}>
-            {t('selectRingtone')}
-          </Text>
 
-          <View style={styles.divider} />
-
-          <ScrollView style={{maxHeight: 400}}>
-            {ringtones.map((tone, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.ringtoneOption,
-                  tempSelectedTone === tone.labelKey && {
-                    backgroundColor: colors.primaryContainer,
-                    borderRadius: 8,
-                  },
-                ]}
-                onPress={() => {
-                  setTempSelectedTone(tone.labelKey);
-                  BatteryModule.playAlarm(tone.name);
-                }}>
-                <Text
-                  style={[
-                    styles.ringtoneText,
-                    {
-                      color: colors.text,
-                    },
-                  ]}>
-                  {t(tone.labelKey)}
-                </Text>
-                {tempSelectedTone === tone.labelKey && (
-                  <Icon name="check" size={16} color={colors.description} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <View style={styles.modalActions}>
-            <Button
-              mode="contained-tonal"
-              onPress={() => setShowRingtoneModal(false)}
-              labelStyle={{fontWeight: '600'}}
-              textColor={colors.outline}>
-              {t('cancel')}
-            </Button>
-            <Button
-              mode="contained"
-              onPress={() => {
-                handleChange('ringtone', tempSelectedTone);
-                setShowRingtoneModal(false);
-              }}
-              labelStyle={{fontWeight: '600'}}
-              textColor={'white'}>
-              {t('select')}
-            </Button>
-          </View>
-        </Modal>
-      </Portal>
+      <RingtoneModal
+        alarm={alarm}
+        ringtones={ringtones}
+        handleChangeRingtone={handleChange}
+        showRingtoneModal={showRingtoneModal}
+        setShowRingtoneModal={setShowRingtoneModal}
+      />
     </View>
   );
 };
@@ -314,16 +247,6 @@ const styles = StyleSheet.create({
   sliderWrap: {marginBottom: -30},
   leftIcon: {marginRight: 6},
   limitedWidthBox: {maxWidth: '70%'},
-  ringtoneModal: {padding: 20, margin: 20, borderRadius: 16},
-  // modalTitle: {fontSize: 16, fontWeight: '600', marginBottom: 12},
-  // ringtoneOption: {
-  //   paddingVertical: 12,
-  //   borderBottomWidth: 0.5,
-  //   flexDirection: 'row',
-  //   justifyContent: 'space-between',
-  //   alignItems: 'center',
-  // },
-  // ringtoneText: {fontSize: 14},
 
   cardTitle: {
     fontSize: 16,
@@ -336,46 +259,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   selectedRingtoneText: {
-    fontWeight: '600',
-  },
-
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#444',
-    marginBottom: 10,
-  },
-  ringtoneOption: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  ringtoneText: {
-    fontSize: 14,
-  },
-  modalCloseButton: {
-    marginTop: 12,
-    alignItems: 'center',
-  },
-  modalCloseText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  modalActions: {
-    marginTop: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-  },
-  modalActionText: {
-    fontSize: 14,
     fontWeight: '600',
   },
 });
