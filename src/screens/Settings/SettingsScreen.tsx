@@ -1,21 +1,66 @@
-import React from 'react';
-import {View, ScrollView, StyleSheet, TouchableOpacity} from 'react-native';
-import {Card, Text} from 'react-native-paper';
+import React, {useState} from 'react';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+} from 'react-native';
+import {Card, RadioButton, Text} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import IconMaterial from 'react-native-vector-icons/MaterialCommunityIcons';
 import useAppTheme from '../../services/hooks/useAppTheme';
 import {useTranslation} from 'react-i18next';
-import {useAppSelector} from '../../hooks/hooks';
+import {useAppDispatch, useAppSelector} from '../../hooks/hooks';
+import {
+  setLanguage,
+  setThemeMode,
+  updateTemperatureUnit,
+} from '../../store/slices/settingsSlice';
+import i18n from '../../locales/i18n';
+
+const languages = [
+  {label: 'English', value: 'en'},
+  {label: 'Hindi', value: 'hi'},
+  {label: 'Marathi', value: 'mr'},
+  {label: 'Tamil', value: 'ta'},
+  {label: 'Telugu', value: 'te'},
+  {label: 'Gujarati', value: 'gu'},
+  {label: 'Urdu', value: 'ur'},
+  {label: 'Kannada', value: 'kn'},
+  {label: 'Malayalam', value: 'ml'},
+];
 
 const SettingsScreen = ({navigation}: any) => {
   const {colors} = useAppTheme();
   const {t} = useTranslation();
+  const dispatch = useAppDispatch();
+  const [themeModalVisible, setThemeModalVisible] = useState(false);
+  const themeMode = useAppSelector(state => state.settings.themeMode);
+
+  const [tempModalVisible, setTempModalVisible] = useState(false);
+  const tempUnit = useAppSelector(state => state.settings.temperatureUnit);
+
+  const language = useAppSelector(state => state.settings.language);
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
+
+  const handleLanguageChange = (lng: string) => {
+    i18n.changeLanguage(lng);
+    dispatch(setLanguage(lng));
+    setLanguageModalVisible(false);
+  };
+
   const fullAlarm = useAppSelector(
     state => state.settings.fullChargeAlarm || {},
   );
   const lowAlarm = useAppSelector(
     state => state.settings.lowBatteryAlarm || {},
   );
+
+  const handleThemeChange = (mode: 'auto' | 'light' | 'dark') => {
+    dispatch(setThemeMode(mode));
+    setThemeModalVisible(false);
+  };
 
   return (
     <View style={[styles.container, {backgroundColor: colors.background}]}>
@@ -138,7 +183,7 @@ const SettingsScreen = ({navigation}: any) => {
           <Card.Content>
             <TouchableOpacity
               style={styles.optionRow}
-              onPress={() => navigation.navigate('ThemeSettings')}>
+              onPress={() => setThemeModalVisible(true)}>
               <View style={styles.rowLeft}>
                 <IconMaterial
                   name="theme-light-dark"
@@ -149,7 +194,7 @@ const SettingsScreen = ({navigation}: any) => {
               </View>
               <View style={styles.rowRight}>
                 <Text style={[styles.optionText, {color: colors.description}]}>
-                  Light
+                  {themeMode.charAt(0).toUpperCase() + themeMode.slice(1)}
                 </Text>
                 <IconMaterial
                   name="chevron-right"
@@ -165,7 +210,7 @@ const SettingsScreen = ({navigation}: any) => {
           <Card.Content>
             <TouchableOpacity
               style={styles.optionRow}
-              onPress={() => navigation.navigate('LanguageSettings')}>
+              onPress={() => setLanguageModalVisible(true)}>
               <View style={styles.rowLeft}>
                 <IconMaterial
                   name="translate"
@@ -176,7 +221,8 @@ const SettingsScreen = ({navigation}: any) => {
               </View>
               <View style={styles.rowRight}>
                 <Text style={[styles.optionText, {color: colors.description}]}>
-                  English
+                  {languages.find(l => l.value === language)?.label ??
+                    'English'}
                 </Text>
                 <IconMaterial
                   name="chevron-right"
@@ -192,7 +238,7 @@ const SettingsScreen = ({navigation}: any) => {
           <Card.Content>
             <TouchableOpacity
               style={styles.optionRow}
-              onPress={() => navigation.navigate('LanguageSettings')}>
+              onPress={() => setTempModalVisible(true)}>
               <View style={styles.rowLeft}>
                 <IconMaterial
                   name="coolant-temperature"
@@ -203,7 +249,7 @@ const SettingsScreen = ({navigation}: any) => {
               </View>
               <View style={styles.rowRight}>
                 <Text style={[styles.optionText, {color: colors.description}]}>
-                  °C
+                  {tempUnit === 'c' ? '°C' : '°F'}
                 </Text>
                 <IconMaterial
                   name="chevron-right"
@@ -226,6 +272,133 @@ const SettingsScreen = ({navigation}: any) => {
           <Text style={styles.proButtonText}>Upgrade</Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={themeModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setThemeModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, {backgroundColor: colors.card}]}>
+            <Text style={[styles.modalTitle, {color: colors.text}]}>
+              Select Theme
+            </Text>
+            <RadioButton.Group
+              onValueChange={value =>
+                handleThemeChange(value as 'auto' | 'light' | 'dark')
+              }
+              value={themeMode}>
+              {['auto', 'light', 'dark'].map(mode => (
+                <TouchableOpacity
+                  key={mode}
+                  style={styles.radioOption}
+                  onPress={() => handleThemeChange(mode as any)}>
+                  <RadioButton value={mode} color={colors.primary} />
+                  <Text style={[styles.radioLabel, {color: colors.text}]}>
+                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </RadioButton.Group>
+            <TouchableOpacity
+              style={[
+                styles.modalCloseButton,
+                {backgroundColor: colors.primary},
+              ]}
+              onPress={() => setThemeModalVisible(false)}>
+              <Text style={styles.modalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={tempModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setTempModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, {backgroundColor: colors.card}]}>
+            <Text style={[styles.modalTitle, {color: colors.text}]}>
+              Select Temperature Unit
+            </Text>
+
+            <RadioButton.Group
+              onValueChange={value => {
+                dispatch(updateTemperatureUnit(value as 'c' | 'f'));
+                setTempModalVisible(false); // ✅ Close on select
+              }}
+              value={tempUnit}>
+              {[
+                {label: 'Celsius (°C)', value: 'c'},
+                {label: 'Fahrenheit (°F)', value: 'f'},
+              ].map(item => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={styles.radioOption}
+                  onPress={() => {
+                    dispatch(updateTemperatureUnit(item.value as 'c' | 'f'));
+                    setTempModalVisible(false); // ✅ Close on select
+                  }}>
+                  <RadioButton value={item.value} color={colors.primary} />
+                  <Text style={[styles.radioLabel, {color: colors.text}]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </RadioButton.Group>
+
+            {/* ✅ Close button */}
+            <TouchableOpacity
+              style={[
+                styles.modalCloseButton,
+                {backgroundColor: colors.primary},
+              ]}
+              onPress={() => setTempModalVisible(false)}>
+              <Text style={styles.modalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={languageModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setLanguageModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, {backgroundColor: colors.card}]}>
+            <Text style={[styles.modalTitle, {color: colors.text}]}>
+              Select Language
+            </Text>
+
+            <RadioButton.Group
+              onValueChange={value => handleLanguageChange(value)}
+              value={language}>
+              {languages.map(item => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={styles.radioOption}
+                  onPress={() => handleLanguageChange(item.value)}>
+                  <RadioButton value={item.value} color={colors.primary} />
+                  <Text style={[styles.radioLabel, {color: colors.text}]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </RadioButton.Group>
+
+            <TouchableOpacity
+              style={[
+                styles.modalCloseButton,
+                {backgroundColor: colors.primary},
+              ]}
+              onPress={() => setLanguageModalVisible(false)}>
+              <Text style={styles.modalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -233,9 +406,7 @@ const SettingsScreen = ({navigation}: any) => {
 export default SettingsScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: {flex: 1},
   scrollContainer: {
     padding: 16,
     paddingBottom: 100,
@@ -310,5 +481,39 @@ const styles = StyleSheet.create({
     color: '#4763f7',
     fontWeight: '600',
     fontSize: 13,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: '#00000088',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  radioLabel: {
+    fontSize: 14,
+  },
+  modalCloseButton: {
+    alignSelf: 'flex-end',
+    marginTop: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  modalCloseText: {
+    color: 'white',
+    fontWeight: '600',
   },
 });

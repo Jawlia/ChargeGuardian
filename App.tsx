@@ -3,7 +3,7 @@ import {Provider} from 'react-redux';
 import React, {useEffect} from 'react';
 import {store, persistor} from './store';
 import {I18nextProvider} from 'react-i18next';
-import {useAppSelector} from './src/hooks/hooks';
+import {useAppDispatch, useAppSelector} from './src/hooks/hooks';
 import {PaperProvider} from 'react-native-paper';
 import BootSplash from 'react-native-bootsplash';
 import {headerTitleStyle} from './src/utils/utils';
@@ -18,11 +18,31 @@ import {
   DefaultTheme as NavigationDefaultTheme,
   DarkTheme as NavigationDarkTheme,
 } from '@react-navigation/native';
-import ChargeSettingsScreen from './src/screens/Settings/ChargeSettingsScreen';
+
+import {
+  updateFullChargeAlarm,
+  updateLowBatteryAlarm,
+  completeInitialSetup,
+} from './src/store/slices/settingsSlice';
+import {ringtones} from './src/config/ringtones';
+import {setDarkMode} from './src/store/slices/themeSlice';
+import {Appearance} from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
 function AppNavigator() {
+  const themeMode = useAppSelector(state => state.settings.themeMode);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const systemTheme = Appearance.getColorScheme();
+    if (themeMode === 'auto') {
+      dispatch(setDarkMode(systemTheme === 'dark'));
+    } else {
+      dispatch(setDarkMode(themeMode === 'dark'));
+    }
+  }, [themeMode]);
+
   const isDark = useAppSelector(state => state.theme.isDarkMode);
   const theme = isDark ? DarkTheme : LightTheme;
 
@@ -62,11 +82,6 @@ function AppNavigator() {
               component={DrawerNavigator}
               options={{headerShown: false}}
             />
-            {/* <Stack.Screen
-              name="ChargeSettings"
-              component={ChargeSettingsScreen}
-              options={{title: 'Alarm Settings'}}
-            /> */}
           </Stack.Navigator>
         </NavigationContainer>
       </I18nextProvider>
@@ -75,16 +90,34 @@ function AppNavigator() {
 }
 
 function App(): React.JSX.Element {
+  const dispatch = store.dispatch;
+  const isInitialSetupDone = store.getState().settings.isInitialSetupDone;
+
   useEffect(() => {
     const init = async () => {
-      // multiple async tasks
+      if (!isInitialSetupDone) {
+        const lang = i18n.language || 'en';
+        const fullToneKey = `battery_full_${lang}`;
+        const lowToneKey = `battery_low_${lang}`;
+
+        const defaultFullTone =
+          ringtones.find(r => r.name === fullToneKey)?.name ||
+          'battery_full_english';
+        const defaultLowTone =
+          ringtones.find(r => r.name === lowToneKey)?.name ||
+          'battery_low_english';
+
+        dispatch(updateFullChargeAlarm({ringtone: defaultFullTone}));
+        dispatch(updateLowBatteryAlarm({ringtone: defaultLowTone}));
+        dispatch(completeInitialSetup());
+      }
     };
 
     init().finally(async () => {
-      await new Promise<void>(resolve => setTimeout(() => resolve(), 1000));
+      await new Promise<void>(resolve => setTimeout(resolve, 1000));
       await BootSplash.hide({fade: true});
     });
-  }, []);
+  }, [dispatch, isInitialSetupDone]);
 
   return (
     <Provider store={store}>

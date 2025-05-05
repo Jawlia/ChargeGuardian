@@ -7,6 +7,7 @@ import useAppTheme from '../services/hooks/useAppTheme';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import CustomDrawerContent, {getDrawerIcon} from './CustomDrawerContent';
 import ChargeSettingsScreen from '../screens/Settings/ChargeSettingsScreen';
+import AntiTheftSettingsScreen from '../screens/AntiTheftSettings/AntiTheftSettingsScreen';
 
 const Drawer = createDrawerNavigator();
 const TAB_ROUTES = ['Home', 'Settings', 'Profile'];
@@ -87,6 +88,12 @@ export default function DrawerNavigator() {
         name="ChargeSettings"
         component={ChargeSettingsScreen}
         options={{title: 'Alarm Settings'}}
+      />
+
+      <Drawer.Screen
+        name="AntiTheftSettings"
+        component={AntiTheftSettingsScreen}
+        options={{title: 'Anti-Theft Settings'}}
       />
     </Drawer.Navigator>
   );

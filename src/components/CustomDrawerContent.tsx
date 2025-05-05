@@ -4,7 +4,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
 } from 'react-native';
-import React from 'react';
+import React, {useState} from 'react';
 import {
   DrawerItem,
   DrawerItemList,
@@ -12,12 +12,12 @@ import {
 } from '@react-navigation/drawer';
 import {spacing} from '../themes/themes';
 import {useTranslation} from 'react-i18next';
-import {toggleTheme} from '../store/slices/themeSlice';
 import useAppTheme from '../services/hooks/useAppTheme';
-import {Text, Avatar, Switch} from 'react-native-paper';
+import {Text, Avatar, Menu} from 'react-native-paper';
 import {useAppSelector, useAppDispatch} from '../hooks/hooks';
 import {height as deviceHeight} from '../utils/utils';
 import MaterialIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {setThemeMode} from '../store/slices/settingsSlice';
 
 export const getDrawerIcon = (
   {color, size}: {color: string; size: number},
@@ -28,8 +28,18 @@ const CustomDrawerContent = (props: any) => {
   const {t} = useTranslation();
   const {height} = useWindowDimensions();
   const {colors} = useAppTheme();
-  const isDark = useAppSelector(state => state.theme.isDarkMode);
   const dispatch = useAppDispatch();
+
+  const themeMode = useAppSelector(state => state.settings.themeMode);
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const handleSelectTheme = (mode: 'auto' | 'light' | 'dark') => {
+    dispatch(setThemeMode(mode));
+    setMenuVisible(false);
+  };
+
+  const getLabel = (mode: string) =>
+    mode.charAt(0).toUpperCase() + mode.slice(1);
 
   return (
     <DrawerContentScrollView
@@ -46,27 +56,44 @@ const CustomDrawerContent = (props: any) => {
         ]}>
         <View style={styles.headerTop}>
           <Avatar.Icon size={60} icon="account-circle" color="white" />
-          <TouchableOpacity onPress={() => dispatch(toggleTheme())}>
-            <MaterialIcons name="weather-night" size={24} color="#fff" />
-          </TouchableOpacity>
+          <MaterialIcons name="weather-night" size={24} color="#fff" />
         </View>
 
         <Text style={styles.username}>Emma</Text>
         <Text style={styles.phone}>+91 9876543210</Text>
       </View>
 
-      {/*  Drawer Items */}
+      {/* Drawer Items */}
       <View style={styles.listContainer}>
         <DrawerItemList {...props} />
 
-        <View style={styles.themeToggle}>
-          <Text style={styles.label}>{t('darkMode')}</Text>
-          <Switch
-            value={isDark}
-            onValueChange={(value: boolean) => {
-              dispatch(toggleTheme());
-            }}
-          />
+        <View style={styles.themeDropdown}>
+          <Text style={[styles.label, {color: colors.text}]}>Theme</Text>
+
+          <Menu
+            visible={menuVisible}
+            onDismiss={() => setMenuVisible(false)}
+            anchor={
+              <TouchableOpacity
+                onPress={() => setMenuVisible(true)}
+                style={styles.menuAnchor}>
+                <Text style={[styles.menuValue, {color: colors.primary}]}>
+                  {getLabel(themeMode)}
+                </Text>
+                <MaterialIcons
+                  name="chevron-down"
+                  size={20}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+            }>
+            <Menu.Item onPress={() => handleSelectTheme('auto')} title="Auto" />
+            <Menu.Item
+              onPress={() => handleSelectTheme('light')}
+              title="Light"
+            />
+            <Menu.Item onPress={() => handleSelectTheme('dark')} title="Dark" />
+          </Menu>
         </View>
       </View>
 
@@ -121,14 +148,25 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: deviceHeight * 0.04,
   },
-  themeToggle: {
+  themeDropdown: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  menuAnchor: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  menuValue: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   label: {
     fontSize: 16,
+    marginBottom: 8,
   },
   footer: {
     borderTopWidth: 1,
