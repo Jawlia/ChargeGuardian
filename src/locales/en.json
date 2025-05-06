@@ -57,6 +57,7 @@
   "close": "Close",
   "cancel": "Cancel",
   "select": "Select",
+  "password": "Password",
   "antiTheftRingtoneDesc": "Customize tone for anti theft alerts in your style.",
 
   "battery_full_english": "Battery Full (English)",
@@ -90,5 +91,17 @@
   "Enter4DigitPassword": "Enter password",
   "InvalidPasswordAlert": "Please enter a valid 4-digit number",
   "Update": "Update",
-  "Save": "Save"
+  "Save": "Save",
+  "antiTheftTitle": "Anti-Theft Alarm",
+  "antiTheftDescription": "Protect your phone from theft while charging. Alarm rings if unplugged — only your password can stop it.",
+  "enableAlarm": "Enable Alarm",
+  "repeat": "Repeat",
+  "antiTheftPasswordDesc": "Used to stop alarm when unplugged. Keep it private and easy to remember.",
+  "setPasswordTitle": "Set 4-digit Password",
+  "updatePasswordTitle": "Update 4-digit Password",
+  "set4DigitPassword": "Set 4-digit Password",
+  "passwordTooltip": "This password is required to stop the Anti-Theft alarm once it starts. Choose a secure 4-digit code. Don't forget it.",
+  "passwordDescription": "Your password helps secure Anti-Theft alarm access.",
+  "enterPassword": "Enter 4-digit password",
+  "accept": "Accept"
 }

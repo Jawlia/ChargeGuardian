@@ -5,11 +5,9 @@ import {
   StyleSheet,
   Switch,
   TouchableOpacity,
-  TextInput,
-  Modal,
   Alert,
 } from 'react-native';
-import {Card, Portal} from 'react-native-paper';
+import {Card} from 'react-native-paper';
 import {useTranslation} from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import useAppTheme from '../../services/hooks/useAppTheme';
@@ -18,35 +16,25 @@ import {updateAntiTheftSettings} from '../../store/slices/settingsSlice';
 import VolumeSlider from '../../components/VolumeSlider';
 import {ringtones} from '../../config/ringtones';
 import {RingtoneModal} from '../../components/RingtoneModal';
+import PasswordModal from './PasswordModal';
 
 const AntiTheftSettingsScreen = () => {
   const {colors} = useAppTheme();
   const {t} = useTranslation();
   const dispatch = useAppDispatch();
   const settings = useAppSelector(state => state.settings.antiTheft);
-  const [changePasswordModal, setChangePasswordModal] = useState(false);
   const [isChangeMode, setIsChangeMode] = useState(false);
-
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const togglePasswordVisibility = () => setIsPasswordVisible(prev => !prev);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
   const [showRingtoneModal, setShowRingtoneModal] = useState(false);
 
-  // For first-time setup
   useEffect(() => {
     if (!settings.password || settings.password === 0) {
       setShowPasswordModal(true);
       setIsChangeMode(false);
     }
-  });
-
-  const savePassword = () => {
-    if (newPassword.length !== 4 || isNaN(Number(newPassword))) {
-      Alert.alert('Error', 'Please enter a valid 4-digit number');
-      return;
-    }
-    dispatch(updateAntiTheftSettings({password: Number(newPassword)}));
-    setShowPasswordModal(false);
-  };
+  }, [settings.password]);
 
   const handleChange = (field: keyof typeof settings, value: any) => {
     dispatch(updateAntiTheftSettings({[field]: value}));
@@ -56,17 +44,18 @@ const AntiTheftSettingsScreen = () => {
     <View style={[styles.container, {backgroundColor: colors.background}]}>
       <Card style={[styles.card, {backgroundColor: colors.card}]}>
         <Card.Content>
-          <Text style={styles.title}>{t('Anti-Theft Alarm')}</Text>
+          <Text style={[styles.title, {color: colors.text}]}>
+            {t('antiTheftTitle')}
+          </Text>
           <Text style={[styles.descriptionText, {color: colors.description}]}>
-            Protect your phone from theft while charging. Alarm rings if
-            unplugged — only your password can stop it.
+            {t('antiTheftDescription')}
           </Text>
 
           <View style={styles.rowBetween}>
             <View style={styles.rowLeft}>
               <Icon name="lock-alert" size={20} color={colors.primary} />
               <Text style={[styles.sectionHeading, {color: colors.text}]}>
-                {t('Enable Alarm')}
+                {t('enableAlarm')}
               </Text>
             </View>
             <Switch
@@ -84,7 +73,7 @@ const AntiTheftSettingsScreen = () => {
             <View style={styles.rowLeft}>
               <Icon name="volume-high" size={20} color={colors.primary} />
               <Text style={[styles.sectionHeading, {color: colors.text}]}>
-                {t('Volume')}
+                {t('volume')}
               </Text>
             </View>
             <VolumeSlider
@@ -98,7 +87,7 @@ const AntiTheftSettingsScreen = () => {
             <View style={styles.rowLeft}>
               <Icon name="vibrate" size={20} color={colors.primary} />
               <Text style={[styles.sectionHeading, {color: colors.text}]}>
-                {t('Vibration')}
+                {t('vibration')}
               </Text>
             </View>
             <Switch
@@ -116,7 +105,7 @@ const AntiTheftSettingsScreen = () => {
             <View style={styles.rowLeft}>
               <Icon name="repeat" size={20} color={colors.primary} />
               <Text style={[styles.sectionHeading, {color: colors.text}]}>
-                {t('Repeat')}
+                {t('repeat')}
               </Text>
             </View>
             <Switch
@@ -129,7 +118,11 @@ const AntiTheftSettingsScreen = () => {
               }}
             />
           </View>
+        </Card.Content>
+      </Card>
 
+      <Card style={[styles.card, {backgroundColor: colors.card}]}>
+        <Card.Content>
           <TouchableOpacity
             style={styles.rowBetweenSubCard}
             onPress={() => setShowRingtoneModal(true)}>
@@ -145,7 +138,10 @@ const AntiTheftSettingsScreen = () => {
                 </Text>
               </View>
               <Text
-                style={[styles.descriptionText, {color: colors.description}]}>
+                style={[
+                  styles.descriptionText,
+                  {color: colors.description, marginBottom: 0},
+                ]}>
                 {t('antiTheftRingtoneDesc')}{' '}
                 <Text
                   style={[
@@ -158,70 +154,65 @@ const AntiTheftSettingsScreen = () => {
             </View>
             <Icon name="chevron-right" size={20} color={colors.description} />
           </TouchableOpacity>
-
-          <View style={styles.rowBetween}>
-            <View style={styles.rowLeft}>
-              <Icon
-                name="form-textbox-password"
-                size={20}
-                color={colors.primary}
-              />
-              <Text style={[styles.sectionHeading, {color: colors.text}]}>
-                {t('Password')}
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => {
-                setShowPasswordModal(true);
-                setIsChangeMode(true);
-              }}>
-              <Text style={{color: colors.primary, fontWeight: '600'}}>
-                **** {t('Change')}
-              </Text>
-            </TouchableOpacity>
-          </View>
         </Card.Content>
       </Card>
 
-      <Modal visible={showPasswordModal} transparent>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, {backgroundColor: colors.card}]}>
-            <Text style={[styles.modalTitle, {color: colors.text}]}>
-              {isChangeMode ? t('ChangePassword') : t('SetPassword')}
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                {borderColor: colors.primary, color: colors.text},
-              ]}
-              placeholder={t('Enter4DigitPassword')}
-              keyboardType="numeric"
-              maxLength={4}
-              value={newPassword}
-              onChangeText={setNewPassword}
-              placeholderTextColor={colors.outline}
-            />
-            <TouchableOpacity
-              style={[styles.saveBtn, {backgroundColor: colors.primary}]}
-              onPress={() => {
-                if (newPassword.length !== 4 || isNaN(Number(newPassword))) {
-                  Alert.alert(t('Error'), t('InvalidPasswordAlert'));
-                  return;
-                }
-
-                dispatch(
-                  updateAntiTheftSettings({password: Number(newPassword)}),
-                );
-                setShowPasswordModal(false);
-                setNewPassword('');
-              }}>
-              <Text style={{color: '#fff'}}>
-                {isChangeMode ? t('Update') : t('Save')}
+      <Card style={[styles.card, {backgroundColor: colors.card}]}>
+        <Card.Content>
+          <View style={styles.rowBetweenSmall}>
+            <View style={styles.rowLeft}>
+              <Icon name="key-variant" size={20} color={colors.primary} />
+              <Text style={[styles.sectionHeading, {color: colors.text}]}>
+                {t('password')}
               </Text>
-            </TouchableOpacity>
+            </View>
+
+            <View style={styles.passwordBox}>
+              <Text
+                style={{color: colors.text, fontWeight: '600', marginRight: 6}}>
+                {isPasswordVisible
+                  ? settings.password.toString()
+                  : '•'.repeat(settings.password.toString().length)}
+              </Text>
+
+              <TouchableOpacity onPress={togglePasswordVisibility}>
+                <Icon
+                  name={isPasswordVisible ? 'eye-off' : 'eye'}
+                  size={20}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{marginLeft: 12}}
+                onPress={() => {
+                  setShowPasswordModal(true);
+                  setIsChangeMode(true);
+                }}>
+                <Icon name="pencil" size={18} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+          <Text
+            style={[
+              styles.descriptionText,
+              {color: colors.description, marginBottom: 0},
+            ]}>
+            {t('antiTheftPasswordDesc')}
+          </Text>
+        </Card.Content>
+      </Card>
+
+      <PasswordModal
+        visible={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onSave={pass =>
+          dispatch(updateAntiTheftSettings({password: Number(pass)}))
+        }
+        initialPassword={settings.password.toString()}
+        mode={isChangeMode ? 'edit' : 'set'}
+        title={isChangeMode ? t('updatePasswordTitle') : t('setPasswordTitle')}
+      />
 
       <RingtoneModal
         alarm={settings.ringtone}
@@ -246,48 +237,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 12,
   },
+  rowBetweenSmall: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   rowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  label: {fontSize: 14},
-  ringtoneSelector: {marginTop: 16},
-  ringtoneName: {fontSize: 12, marginTop: 4},
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: '#00000088',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '80%',
-    padding: 20,
-    borderRadius: 12,
-  },
-  modalTitle: {fontSize: 16, fontWeight: '600', marginBottom: 12},
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 16,
-  },
-  saveBtn: {
-    marginTop: 16,
-    alignSelf: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  //aaa
   descriptionText: {fontSize: 11, marginBottom: 16},
-
   rowBetweenSubCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 12,
   },
   sectionHeading: {
     fontSize: 14,
@@ -296,7 +260,10 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   limitedWidthBox: {maxWidth: '70%'},
-  selectedRingtoneText: {
-    fontWeight: '600',
+  selectedRingtoneText: {fontWeight: '600'},
+  passwordBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 });
