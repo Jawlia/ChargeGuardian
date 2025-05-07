@@ -3,7 +3,7 @@ import {useAppDispatch} from '../../hooks/hooks';
 import {setBatteryInfo} from '../../store/slices/batterySlice';
 import DeviceInfo, {usePowerState} from 'react-native-device-info';
 import {
-  getBatteryCapecity,
+  getBatteryCapacity,
   getBatteryHealth,
   getBatteryTechnology,
   getBatteryTemperature,
@@ -19,7 +19,7 @@ const useBatteryStatus = () => {
       const batteryLevel = await DeviceInfo.getBatteryLevel();
       const batteryTemprature = await getBatteryTemperature();
       const batteryHealth = await getBatteryHealth();
-      const batteryCapecity = await getBatteryCapecity();
+      const batteryCapecity = await getBatteryCapacity();
       const batteryTechnology = await getBatteryTechnology();
 
       dispatch(

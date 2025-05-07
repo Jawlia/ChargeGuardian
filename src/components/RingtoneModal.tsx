@@ -14,14 +14,13 @@ import {useTranslation} from 'react-i18next';
 type RingtoneModalPramas = {
   alarm: any;
   ringtones: Array<any>;
-  handleChangeRingtone: any
-  showRingtoneModal: boolean
-  setShowRingtoneModal: any
+  handleChangeRingtone: any;
+  showRingtoneModal: boolean;
+  setShowRingtoneModal: any;
 };
 
 export const RingtoneModal = (props: RingtoneModalPramas) => {
   const {BatteryModule} = NativeModules;
-//   const [showRingtoneModal, setShowRingtoneModal] = useState(false);
   const [tempSelectedTone, setTempSelectedTone] = useState(
     props?.alarm?.ringtone,
   );
@@ -55,7 +54,7 @@ export const RingtoneModal = (props: RingtoneModalPramas) => {
               ]}
               onPress={() => {
                 setTempSelectedTone(tone.labelKey);
-                BatteryModule.playAlarm(tone.name);
+                BatteryModule.playAlarm(tone.name, 0.7, false, false);
               }}>
               <Text
                 style={[

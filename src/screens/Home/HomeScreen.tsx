@@ -47,7 +47,6 @@ const getTemperatureStatus = (temp: number, t: any): string => {
 
 const HomeScreen = ({navigation}: any) => {
   const dispatch = useAppDispatch();
-  useBatteryStatus();
   const {t} = useTranslation();
   const {colors, isDark} = useAppTheme();
   const [showTips, setShowTips] = useState(false);

@@ -18,18 +18,7 @@ import {
   updateTemperatureUnit,
 } from '../../store/slices/settingsSlice';
 import i18n from '../../locales/i18n';
-
-const languages = [
-  {label: 'English', value: 'en'},
-  {label: 'Hindi', value: 'hi'},
-  {label: 'Marathi', value: 'mr'},
-  {label: 'Tamil', value: 'ta'},
-  {label: 'Telugu', value: 'te'},
-  {label: 'Gujarati', value: 'gu'},
-  {label: 'Urdu', value: 'ur'},
-  {label: 'Kannada', value: 'kn'},
-  {label: 'Malayalam', value: 'ml'},
-];
+import {languages} from '../../utils/utils';
 
 const SettingsScreen = ({navigation}: any) => {
   const {colors} = useAppTheme();

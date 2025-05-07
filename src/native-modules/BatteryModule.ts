@@ -4,40 +4,45 @@ const {BatteryModule} = NativeModules;
 
 export const getBatteryTemperature = async (): Promise<number> => {
   try {
-    const temp = await BatteryModule.getBatteryTemperature();
-    return temp;
+    return await BatteryModule.getBatteryTemperature();
   } catch (error) {
-    console.error('Failed to get battery temperature:', error);
+    console.error('❌ getBatteryTemperature error:', error);
     return 0;
   }
 };
 
-export const getBatteryHealth = async () => {
+export const getBatteryLevel = async (): Promise<number> => {
   try {
-    const health = await BatteryModule.getBatteryHealth();
-    return health;
+    return await BatteryModule.getBatteryLevel();
   } catch (error) {
-    console.error(error);
+    console.error('❌ getBatteryTemperature error:', error);
+    return 0;
+  }
+};
+
+export const getBatteryHealth = async (): Promise<string> => {
+  try {
+    return await BatteryModule.getBatteryHealth();
+  } catch (error) {
+    console.error('❌ getBatteryHealth error:', error);
     return 'Unknown';
   }
 };
 
-export const getBatteryCapecity = async () => {
+export const getBatteryCapacity = async (): Promise<number> => {
   try {
-    const capecity = await BatteryModule.getBatteryCapacity();
-    return capecity;
+    return await BatteryModule.getBatteryCapacity();
   } catch (error) {
-    console.error(error);
+    console.error('❌ getBatteryCapacity error:', error);
     return -1;
   }
 };
 
 export const getBatteryTechnology = async (): Promise<string> => {
   try {
-    const technology = await BatteryModule.getBatteryTechnology();
-    return technology;
+    return await BatteryModule.getBatteryTechnology();
   } catch (error) {
-    console.error('Error fetching battery technology:', error);
+    console.error('❌ getBatteryTechnology error:', error);
     return 'Unknown';
   }
 };

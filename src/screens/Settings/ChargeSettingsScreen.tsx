@@ -1,5 +1,14 @@
-import React, {useState} from 'react';
-import {View, Text, Switch, StyleSheet, TouchableOpacity} from 'react-native';
+import React, {useEffect, useLayoutEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  Switch,
+  StyleSheet,
+  TouchableOpacity,
+  NativeModules,
+  ScrollView,
+  ToastAndroid,
+} from 'react-native';
 import {Card} from 'react-native-paper';
 import {useTranslation} from 'react-i18next';
 import {useAppDispatch, useAppSelector} from '../../hooks/hooks';
@@ -14,13 +23,20 @@ import VolumeSlider from '../../components/VolumeSlider';
 import CustomStyledSlider from '../../components/CustomSlider';
 import {ringtones} from '../../config/ringtones';
 import {RingtoneModal} from '../../components/RingtoneModal';
+import {
+  cancelBatteryAlarm,
+  scheduleBatteryAlarm,
+} from '../../services/scheduleAlarm';
+import {useNavigation} from '@react-navigation/native';
 
-const ChargeSettingsScreen = ({route}: any) => {
+const ChargeSettingsScreen = ({route, navigation}: any) => {
   const {type} = route.params;
   const {colors} = useAppTheme();
   const {t} = useTranslation();
   const dispatch = useAppDispatch();
+  const {BatteryModule} = NativeModules;
   const [showRingtoneModal, setShowRingtoneModal] = useState(false);
+  const nav = useNavigation();
 
   const alarm = useAppSelector(state =>
     type === 'full'
@@ -28,17 +44,65 @@ const ChargeSettingsScreen = ({route}: any) => {
       : state.settings.lowBatteryAlarm,
   );
 
-  const handleChange = (field: string, value: any) => {
-    const payload = {[field]: value};
-    if (type === 'full') {
-      dispatch(updateFullChargeAlarm(payload));
-    } else {
-      dispatch(updateLowBatteryAlarm(payload));
-    }
+  const [localSettings, setLocalSettings] = useState(alarm);
+
+  useEffect(() => {
+    setLocalSettings(alarm);
+  }, [alarm]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={handleSaveSettings}
+          style={{marginRight: 16}}>
+          <Text style={{color: colors.primary, fontWeight: 'bold'}}>
+            {t('save')}
+          </Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, localSettings]);
+
+  const handleLocalChange = (field: string, value: any) => {
+    setLocalSettings(prev => ({...prev, [field]: value}));
   };
 
+  const handleSaveSettings = () => {
+    const payload = {...localSettings};
+    if (type === 'full') {
+      dispatch(updateFullChargeAlarm(payload));
+      if (payload.isEnabled) {
+        scheduleBatteryAlarm('full', payload.alarmValue);
+      } else {
+        cancelBatteryAlarm('full');
+        BatteryModule.stopAlarm();
+      }
+    } else {
+      dispatch(updateLowBatteryAlarm(payload));
+      if (payload.isEnabled) {
+        scheduleBatteryAlarm('low', payload.alarmValue);
+      } else {
+        cancelBatteryAlarm('low');
+      }
+    }
+
+    ToastAndroid.show(
+      `${type === 'full' ? 'Full' : 'Low'} alarm settings updated`,
+      ToastAndroid.SHORT,
+    );
+    nav.goBack();
+  };
+
+  const filteredRingtones = ringtones?.filter(r =>
+    type === 'full'
+      ? !r.labelKey?.includes('battery_low')
+      : !r.labelKey?.includes('battery_full'),
+  );
+
   return (
-    <View style={[styles.container, {backgroundColor: colors.background}]}>
+    <ScrollView
+      style={[styles.container, {backgroundColor: colors.background}]}>
       {/* Charge Slider */}
       <Card style={[styles.card, {backgroundColor: colors.card}]}>
         <Card.Content>
@@ -61,9 +125,11 @@ const ChargeSettingsScreen = ({route}: any) => {
               </Text>
             </View>
             <Switch
-              value={alarm.isEnabled}
-              onValueChange={val => handleChange('isEnabled', val)}
-              thumbColor={alarm.isEnabled ? colors.primary : colors.outline}
+              value={localSettings.isEnabled}
+              onValueChange={val => handleLocalChange('isEnabled', val)}
+              thumbColor={
+                localSettings.isEnabled ? colors.primary : colors.outline
+              }
               trackColor={{
                 false: colors.outline,
                 true: colors.primaryContainer,
@@ -84,20 +150,10 @@ const ChargeSettingsScreen = ({route}: any) => {
               }
               sliderMinValue={type === 'full' ? 60 : 0}
               sliderMaxValue={type === 'full' ? 100 : 50}
-              isAlarmOn={alarm.isEnabled}
-              setAlarm={val =>
-                dispatch(
-                  type === 'full'
-                    ? updateFullChargeAlarm({isEnabled: val})
-                    : updateLowBatteryAlarm({isEnabled: val}),
-                )
-              }
-              alarmValue={alarm.alarmValue}
-              setAlarmValue={val =>
-                type === 'full'
-                  ? dispatch(updateFullChargeAlarm({alarmValue: val}))
-                  : dispatch(updateLowBatteryAlarm({alarmValue: val}))
-              }
+              isAlarmOn={localSettings.isEnabled}
+              setAlarm={val => handleLocalChange('isEnabled', val)}
+              alarmValue={localSettings.alarmValue}
+              setAlarmValue={val => handleLocalChange('alarmValue', val)}
             />
           </View>
         </Card.Content>
@@ -128,14 +184,13 @@ const ChargeSettingsScreen = ({route}: any) => {
                     styles.selectedRingtoneText,
                     {color: colors.primary},
                   ]}>
-                  {t(alarm.ringtone)}
+                  {t(localSettings.ringtone)}
                 </Text>
               </Text>
             </View>
             <Icon name="chevron-right" size={20} color={colors.description} />
           </TouchableOpacity>
 
-          {/* Volume */}
           <View style={styles.rowBetweenSubCard}>
             <View style={styles.rowLeft}>
               <Icon name="volume-high" size={20} color={colors.iconGeneral} />
@@ -144,13 +199,12 @@ const ChargeSettingsScreen = ({route}: any) => {
               </Text>
             </View>
             <VolumeSlider
-              value={alarm.volume}
-              onValueChange={val => handleChange('volume', val)}
+              value={localSettings.volume}
+              onValueChange={val => handleLocalChange('volume', val)}
               color={colors.primary}
             />
           </View>
 
-          {/* Vibration */}
           <View style={styles.rowBetweenSubCard}>
             <View style={styles.rowLeft}>
               <Icon name="vibrate" size={20} color={colors.iconGeneral} />
@@ -159,9 +213,11 @@ const ChargeSettingsScreen = ({route}: any) => {
               </Text>
             </View>
             <Switch
-              value={alarm.vibration}
-              onValueChange={val => handleChange('vibration', val)}
-              thumbColor={alarm.vibration ? colors.primary : colors.outline}
+              value={localSettings.vibration}
+              onValueChange={val => handleLocalChange('vibration', val)}
+              thumbColor={
+                localSettings.vibration ? colors.primary : colors.outline
+              }
               trackColor={{
                 false: colors.outline,
                 true: colors.primaryContainer,
@@ -190,9 +246,11 @@ const ChargeSettingsScreen = ({route}: any) => {
               </Text>
             </View>
             <Switch
-              value={alarm.repeat}
-              onValueChange={val => handleChange('repeat', val)}
-              thumbColor={alarm.repeat ? colors.primary : colors.outline}
+              value={localSettings.repeat}
+              onValueChange={val => handleLocalChange('repeat', val)}
+              thumbColor={
+                localSettings.repeat ? colors.primary : colors.outline
+              }
               trackColor={{
                 false: colors.outline,
                 true: colors.primaryContainer,
@@ -202,16 +260,23 @@ const ChargeSettingsScreen = ({route}: any) => {
         </Card.Content>
       </Card>
 
-      {/* Ringtone Modal */}
-
       <RingtoneModal
-        alarm={alarm}
-        ringtones={ringtones}
-        handleChangeRingtone={handleChange}
+        alarm={localSettings}
+        ringtones={filteredRingtones}
+        handleChangeRingtone={handleLocalChange}
         showRingtoneModal={showRingtoneModal}
         setShowRingtoneModal={setShowRingtoneModal}
       />
-    </View>
+
+      {/* Save Button */}
+      <TouchableOpacity
+        style={{marginTop: 20, marginBottom: 120}}
+        onPress={handleSaveSettings}>
+        <View style={[styles.saveButton, {backgroundColor: colors.primary}]}>
+          <Text style={{color: '#fff', fontWeight: 'bold'}}>{t('save')}</Text>
+        </View>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
@@ -247,7 +312,6 @@ const styles = StyleSheet.create({
   sliderWrap: {marginBottom: -30},
   leftIcon: {marginRight: 6},
   limitedWidthBox: {maxWidth: '70%'},
-
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
@@ -260,5 +324,10 @@ const styles = StyleSheet.create({
   },
   selectedRingtoneText: {
     fontWeight: '600',
+  },
+  saveButton: {
+    padding: 14,
+    borderRadius: 12,
+    alignItems: 'center',
   },
 });

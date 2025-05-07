@@ -8,3 +8,16 @@ export const headerTitleStyle: any = {
   fontWeight: '900',
   fontFamily: 'Poppins-SemiBold',
 };
+
+
+export const languages = [
+  {label: 'English', value: 'en'},
+  {label: 'Hindi', value: 'hi'},
+  {label: 'Marathi', value: 'mr'},
+  {label: 'Tamil', value: 'ta'},
+  {label: 'Telugu', value: 'te'},
+  {label: 'Gujarati', value: 'gu'},
+  {label: 'Urdu', value: 'ur'},
+  {label: 'Kannada', value: 'kn'},
+  {label: 'Malayalam', value: 'ml'},
+];

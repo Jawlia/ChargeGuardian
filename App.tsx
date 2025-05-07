@@ -6,13 +6,14 @@ import {I18nextProvider} from 'react-i18next';
 import {useAppDispatch, useAppSelector} from './src/hooks/hooks';
 import {PaperProvider} from 'react-native-paper';
 import BootSplash from 'react-native-bootsplash';
-import {headerTitleStyle} from './src/utils/utils';
+import {headerTitleStyle, languages} from './src/utils/utils';
 import {DarkTheme, LightTheme} from './src/themes/themes';
 import {PersistGate} from 'redux-persist/integration/react';
 import {NavigationContainer} from '@react-navigation/native';
 import GetStartedScreen from './src/screens/GetStartedScreen';
 import DrawerNavigator from './src/components/DrawerNavigator';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import './src/services/BatteryAlarmTask';
 
 import {
   DefaultTheme as NavigationDefaultTheme,
@@ -27,6 +28,9 @@ import {
 import {ringtones} from './src/config/ringtones';
 import {setDarkMode} from './src/store/slices/themeSlice';
 import {Appearance} from 'react-native';
+import {scheduleBatteryAlarm} from './src/services/scheduleAlarm';
+import {checkAndTriggerAlarm} from './src/services/checkAndTriggerAlarm';
+import useBatteryStatus from './src/services/hooks/useBatteryStatus';
 
 const Stack = createNativeStackNavigator();
 
@@ -58,6 +62,68 @@ function AppNavigator() {
       notification: theme.colors.primary,
     },
   };
+
+  useEffect(() => {
+    const state = store.getState();
+    const {fullChargeAlarm, lowBatteryAlarm} = state.settings;
+
+    if (fullChargeAlarm.isEnabled) {
+      scheduleBatteryAlarm('full', fullChargeAlarm.alarmValue);
+    }
+
+    if (lowBatteryAlarm.isEnabled) {
+      scheduleBatteryAlarm('low', lowBatteryAlarm.alarmValue);
+    }
+  }, []);
+
+  const fullAlarm = useAppSelector(state => state.settings.fullChargeAlarm);
+  const lowAlarm = useAppSelector(state => state.settings.lowBatteryAlarm);
+  useEffect(() => {
+    const fetchBatteryStatus = async () => {
+      await checkAndTriggerAlarm();
+    };
+
+    fetchBatteryStatus();
+  }, [fullAlarm, lowAlarm]);
+
+  useBatteryStatus();
+
+  useEffect(() => {
+    const handleLanguageChange = (lng: string) => {
+      const lang = lng || 'en';
+
+      const langMap = languages.reduce(
+        (acc, curr) => {
+          acc[curr.value] = curr.label.toLowerCase();
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
+
+      const suffix = langMap[lang];
+      if (!suffix) return;
+
+      const state = store.getState();
+      const {fullChargeAlarm, lowBatteryAlarm} = state.settings;
+
+      if (fullChargeAlarm.ringtone.startsWith('battery_full_')) {
+        store.dispatch(
+          updateFullChargeAlarm({ringtone: `battery_full_${suffix}`}),
+        );
+      }
+
+      if (lowBatteryAlarm.ringtone.startsWith('battery_low_')) {
+        store.dispatch(
+          updateLowBatteryAlarm({ringtone: `battery_low_${suffix}`}),
+        );
+      }
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, []);
 
   return (
     <PaperProvider theme={theme}>
