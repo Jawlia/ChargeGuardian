@@ -4,12 +4,16 @@ import { playAlarmByType } from './playAlarm';
 
 const { BatteryModule } = NativeModules;
 
-export const checkAndTriggerAlarm = async () => {
+export const checkAndTriggerAlarm = async (type: string = 'powerChange') => {
   try {
     const state = store.getState();
-    const { fullChargeAlarm, lowBatteryAlarm } = state.settings;
+    const {
+      fullChargeAlarm,
+      lowBatteryAlarm,
+      antiTheft,
+    } = state.settings;
 
-    const batteryInfo = await BatteryModule.getBatteryStatus(); // Must exist natively
+    const batteryInfo = await BatteryModule.getBatteryStatus();
     if (!batteryInfo || typeof batteryInfo.level !== 'number') {
       console.warn('Invalid battery info');
       return;
@@ -17,15 +21,38 @@ export const checkAndTriggerAlarm = async () => {
 
     const percent = batteryInfo.level * 100;
 
-    if (fullChargeAlarm.isEnabled && batteryInfo.charging && percent >= fullChargeAlarm.alarmValue) {
-      playAlarmByType('full');
-    } else if (lowBatteryAlarm.isEnabled && percent <= lowBatteryAlarm.alarmValue && !batteryInfo.charging) {
-      playAlarmByType('low');
-    } else {
-      BatteryModule.stopAlarm(); // ⚠️ No condition matched, stop any running alarm
+    if (type === 'powerChange') {
+      // 🔐 Anti-theft condition (trigger only if was charging and now not)
+      if (antiTheft.isEnabled && !batteryInfo.charging) {
+        playAlarmByType('antiTheft');
+        return;
+      }
+
+      // 🔋 Full charge check
+      if (
+        fullChargeAlarm.isEnabled &&
+        batteryInfo.charging &&
+        percent >= fullChargeAlarm.alarmValue
+      ) {
+        playAlarmByType('full');
+        return;
+      }
+
+      // 🔋 Low battery check
+      if (
+        lowBatteryAlarm.isEnabled &&
+        !batteryInfo.charging &&
+        percent <= lowBatteryAlarm.alarmValue
+      ) {
+         console.log("mkmkm_2",'🔋 Low battery condition met');
+        playAlarmByType('low');
+        return;
+      }
+
+      // ✅ Nothing matches, stop all
+      BatteryModule.stopAlarm();
     }
 
-    // 🔐 Anti-theft unplug logic should be handled separately
   } catch (error) {
     console.error('Alarm check failed:', error);
   }

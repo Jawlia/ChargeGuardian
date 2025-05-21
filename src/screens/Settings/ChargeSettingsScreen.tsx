@@ -96,8 +96,10 @@ const ChargeSettingsScreen = ({route, navigation}: any) => {
 
   const filteredRingtones = ringtones?.filter(r =>
     type === 'full'
-      ? !r.labelKey?.includes('battery_low')
-      : !r.labelKey?.includes('battery_full'),
+      ? !r.labelKey?.includes('battery_full') &&
+        !r.labelKey?.includes('anti_theft')
+      : !r.labelKey?.includes('battery_full') &&
+        !r.labelKey?.includes('anti_theft'),
   );
 
   return (
@@ -143,13 +145,19 @@ const ChargeSettingsScreen = ({route, navigation}: any) => {
               subHeader={t(
                 type === 'full' ? 'fullChargeAlarmDesc' : 'lowBatteryAlarmDesc',
               )}
+              // steps={
+              //   type === 'full'
+              //     ? [60, 70, 80, 90, 100]
+              //     : [0, 10, 20, 30, 40, 50]
+              // }
+              // sliderMinValue={type === 'full' ? 60 : 0}
+              // sliderMaxValue={type === 'full' ? 100 : 50}
+
               steps={
-                type === 'full'
-                  ? [60, 70, 80, 90, 100]
-                  : [0, 10, 20, 30, 40, 50]
+                type === 'full' ? [70, 80, 90, 100] : [0, 10, 20, 30, 50, 60]
               }
-              sliderMinValue={type === 'full' ? 60 : 0}
-              sliderMaxValue={type === 'full' ? 100 : 50}
+              sliderMinValue={type === 'full' ? 70 : 0}
+              sliderMaxValue={type === 'full' ? 100 : 60}
               isAlarmOn={localSettings.isEnabled}
               setAlarm={val => handleLocalChange('isEnabled', val)}
               alarmValue={localSettings.alarmValue}

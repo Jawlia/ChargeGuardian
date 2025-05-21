@@ -1,7 +1,8 @@
-import {NativeModules} from 'react-native';
-import {RootState, store} from '../../store';
+import { NativeModules } from 'react-native';
+import { RootState, store } from '../../store';
+import { showAlarmNotification } from '../screens/notifications/showAlarmNotification';
 
-const {BatteryModule} = NativeModules;
+const { BatteryModule } = NativeModules;
 
 export const playAlarmByType = (type: 'full' | 'low' | 'antiTheft') => {
   const state: RootState = store.getState();
@@ -17,8 +18,13 @@ export const playAlarmByType = (type: 'full' | 'low' | 'antiTheft') => {
 
   if (!config?.isEnabled) return;
 
-  const {ringtone, volume, vibration, repeat} = config;
+  const { ringtone, volume, vibration, repeat } = config;
+
+  // 🔊 Play alarm via native module
   BatteryModule.playAlarm(ringtone, volume, vibration, repeat);
+
+  // 🔔 Show notification for all types
+  showAlarmNotification(type);
 };
 
 export const stopAlarm = () => {

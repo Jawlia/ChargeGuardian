@@ -5,7 +5,8 @@ import {
   StyleSheet,
   Switch,
   TouchableOpacity,
-  Alert,
+  ScrollView,
+  ToastAndroid,
 } from 'react-native';
 import {Card} from 'react-native-paper';
 import {useTranslation} from 'react-i18next';
@@ -17,17 +18,20 @@ import VolumeSlider from '../../components/VolumeSlider';
 import {ringtones} from '../../config/ringtones';
 import {RingtoneModal} from '../../components/RingtoneModal';
 import PasswordModal from './PasswordModal';
+import {useNavigation} from '@react-navigation/native';
 
 const AntiTheftSettingsScreen = () => {
   const {colors} = useAppTheme();
-  const {t} = useTranslation();
+  const {t, i18n} = useTranslation();
   const dispatch = useAppDispatch();
+  const navigation = useNavigation();
   const settings = useAppSelector(state => state.settings.antiTheft);
   const [isChangeMode, setIsChangeMode] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const togglePasswordVisibility = () => setIsPasswordVisible(prev => !prev);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showRingtoneModal, setShowRingtoneModal] = useState(false);
+  const [localSettings, setLocalSettings] = useState(settings);
 
   useEffect(() => {
     if (!settings.password || settings.password === 0) {
@@ -36,12 +40,32 @@ const AntiTheftSettingsScreen = () => {
     }
   }, [settings.password]);
 
+  useEffect(() => {
+    setLocalSettings(settings);
+  }, [settings]);
+
   const handleChange = (field: keyof typeof settings, value: any) => {
-    dispatch(updateAntiTheftSettings({[field]: value}));
+    setLocalSettings(prev => ({...prev, [field]: value}));
   };
 
+  const handleSave = () => {
+    dispatch(updateAntiTheftSettings(localSettings));
+    ToastAndroid.show(
+      t('antiTheftSettingsUpdated') || 'Anti-Theft settings updated!',
+      ToastAndroid.SHORT,
+    );
+    navigation.goBack();
+  };
+
+  const filteredRingtones = ringtones?.filter(
+    r =>
+      !r.labelKey?.includes('battery_full') &&
+      !r.labelKey?.includes('battery_low'),
+  );
+
   return (
-    <View style={[styles.container, {backgroundColor: colors.background}]}>
+    <ScrollView
+      style={[styles.container, {backgroundColor: colors.background}]}>
       <Card style={[styles.card, {backgroundColor: colors.card}]}>
         <Card.Content>
           <Text style={[styles.title, {color: colors.text}]}>
@@ -59,9 +83,11 @@ const AntiTheftSettingsScreen = () => {
               </Text>
             </View>
             <Switch
-              value={settings.isEnabled}
+              value={localSettings.isEnabled}
               onValueChange={val => handleChange('isEnabled', val)}
-              thumbColor={settings.isEnabled ? colors.primary : colors.outline}
+              thumbColor={
+                localSettings.isEnabled ? colors.primary : colors.outline
+              }
               trackColor={{
                 false: colors.outline,
                 true: colors.primaryContainer,
@@ -77,7 +103,7 @@ const AntiTheftSettingsScreen = () => {
               </Text>
             </View>
             <VolumeSlider
-              value={settings.volume}
+              value={localSettings.volume}
               onValueChange={val => handleChange('volume', val)}
               color={colors.primary}
             />
@@ -91,9 +117,11 @@ const AntiTheftSettingsScreen = () => {
               </Text>
             </View>
             <Switch
-              value={settings.vibration}
+              value={localSettings.vibration}
               onValueChange={val => handleChange('vibration', val)}
-              thumbColor={settings.vibration ? colors.primary : colors.outline}
+              thumbColor={
+                localSettings.vibration ? colors.primary : colors.outline
+              }
               trackColor={{
                 false: colors.outline,
                 true: colors.primaryContainer,
@@ -109,9 +137,11 @@ const AntiTheftSettingsScreen = () => {
               </Text>
             </View>
             <Switch
-              value={settings.repeat}
+              value={localSettings.repeat}
               onValueChange={val => handleChange('repeat', val)}
-              thumbColor={settings.repeat ? colors.primary : colors.outline}
+              thumbColor={
+                localSettings.repeat ? colors.primary : colors.outline
+              }
               trackColor={{
                 false: colors.outline,
                 true: colors.primaryContainer,
@@ -148,7 +178,7 @@ const AntiTheftSettingsScreen = () => {
                     styles.selectedRingtoneText,
                     {color: colors.primary},
                   ]}>
-                  {t(settings.ringtone)}
+                  {t(localSettings.ringtone)}
                 </Text>
               </Text>
             </View>
@@ -171,8 +201,8 @@ const AntiTheftSettingsScreen = () => {
               <Text
                 style={{color: colors.text, fontWeight: '600', marginRight: 6}}>
                 {isPasswordVisible
-                  ? settings.password.toString()
-                  : '•'.repeat(settings.password.toString().length)}
+                  ? localSettings.password.toString()
+                  : '•'.repeat(localSettings.password.toString().length)}
               </Text>
 
               <TouchableOpacity onPress={togglePasswordVisibility}>
@@ -215,13 +245,19 @@ const AntiTheftSettingsScreen = () => {
       />
 
       <RingtoneModal
-        alarm={settings.ringtone}
-        ringtones={ringtones}
+        alarm={localSettings}
+        ringtones={filteredRingtones}
         handleChangeRingtone={handleChange}
         showRingtoneModal={showRingtoneModal}
         setShowRingtoneModal={setShowRingtoneModal}
       />
-    </View>
+
+      <TouchableOpacity style={{marginVertical: 20}} onPress={handleSave}>
+        <View style={[styles.saveButton, {backgroundColor: colors.primary}]}>
+          <Text style={{color: '#fff', fontWeight: 'bold'}}>{t('save')}</Text>
+        </View>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
@@ -265,5 +301,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  saveButton: {
+    padding: 14,
+    borderRadius: 12,
+    alignItems: 'center',
   },
 });

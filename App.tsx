@@ -27,10 +27,13 @@ import {
 } from './src/store/slices/settingsSlice';
 import {ringtones} from './src/config/ringtones';
 import {setDarkMode} from './src/store/slices/themeSlice';
-import {Appearance} from 'react-native';
+import {Appearance, NativeModules} from 'react-native';
 import {scheduleBatteryAlarm} from './src/services/scheduleAlarm';
 import {checkAndTriggerAlarm} from './src/services/checkAndTriggerAlarm';
 import useBatteryStatus from './src/services/hooks/useBatteryStatus';
+import notifee, {EventType} from '@notifee/react-native';
+import {stopAlarm} from './src/services/playAlarm';
+import {setupNotificationChannel} from './src/screens/notifications/setupNotificationChannel';
 
 const Stack = createNativeStackNavigator();
 
@@ -64,6 +67,7 @@ function AppNavigator() {
   };
 
   useEffect(() => {
+    setupNotificationChannel();
     const state = store.getState();
     const {fullChargeAlarm, lowBatteryAlarm} = state.settings;
 
@@ -122,6 +126,24 @@ function AppNavigator() {
     i18n.on('languageChanged', handleLanguageChange);
     return () => {
       i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe: any = notifee.onBackgroundEvent(
+      async ({type, detail}) => {
+        if (
+          type === EventType.ACTION_PRESS &&
+          detail.pressAction?.id === 'STOP_ALARM'
+        ) {
+          stopAlarm();
+          await notifee.cancelNotification(detail.notification?.id || '');
+        }
+      },
+    );
+
+    return () => {
+      unsubscribe();
     };
   }, []);
 

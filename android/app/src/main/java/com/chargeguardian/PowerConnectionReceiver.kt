@@ -10,17 +10,22 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 
 class PowerConnectionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        val action = intent.action
+        Log.d("PowerReceiver", "Power event: $action")
+
         val reactContext = (context.applicationContext as ReactApplication)
             .reactNativeHost
             .reactInstanceManager
             .currentReactContext
 
         reactContext?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            ?.emit("PowerEvent", intent.action)
+            ?.emit("PowerEvent", action)
 
+        // Always pass "powerChange" to JS - let JS decide antiTheft or not
         val serviceIntent = Intent(context, BatteryAlarmService::class.java)
         serviceIntent.putExtra("type", "powerChange")
         context.startService(serviceIntent)
+
         HeadlessJsTaskService.acquireWakeLockNow(context)
     }
 }
