@@ -67,17 +67,15 @@ function AppNavigator() {
   };
 
   useEffect(() => {
-    setupNotificationChannel();
-    const state = store.getState();
-    const {fullChargeAlarm, lowBatteryAlarm} = state.settings;
-
-    if (fullChargeAlarm.isEnabled) {
-      scheduleBatteryAlarm('full', fullChargeAlarm.alarmValue);
-    }
-
-    if (lowBatteryAlarm.isEnabled) {
-      scheduleBatteryAlarm('low', lowBatteryAlarm.alarmValue);
-    }
+    // setupNotificationChannel();
+    // const state = store.getState();
+    // const {fullChargeAlarm, lowBatteryAlarm} = state.settings;
+    // if (fullChargeAlarm.isEnabled) {
+    //   scheduleBatteryAlarm('full', fullChargeAlarm.alarmValue);
+    // }
+    // if (lowBatteryAlarm.isEnabled) {
+    //   scheduleBatteryAlarm('low', lowBatteryAlarm.alarmValue);
+    // }
   }, []);
 
   const fullAlarm = useAppSelector(state => state.settings.fullChargeAlarm);
@@ -93,6 +91,18 @@ function AppNavigator() {
   useBatteryStatus();
 
   useEffect(() => {
+    setupNotificationChannel();
+    const state = store.getState();
+    const {fullChargeAlarm, lowBatteryAlarm} = state.settings;
+
+    if (fullChargeAlarm.isEnabled) {
+      scheduleBatteryAlarm('full', fullChargeAlarm.alarmValue);
+    }
+
+    if (lowBatteryAlarm.isEnabled) {
+      scheduleBatteryAlarm('low', lowBatteryAlarm.alarmValue);
+    }
+
     const handleLanguageChange = (lng: string) => {
       const lang = lng || 'en';
 
@@ -123,13 +133,6 @@ function AppNavigator() {
       }
     };
 
-    i18n.on('languageChanged', handleLanguageChange);
-    return () => {
-      i18n.off('languageChanged', handleLanguageChange);
-    };
-  }, []);
-
-  useEffect(() => {
     const unsubscribe: any = notifee.onBackgroundEvent(
       async ({type, detail}) => {
         if (
@@ -142,10 +145,30 @@ function AppNavigator() {
       },
     );
 
+    i18n.on('languageChanged', handleLanguageChange);
     return () => {
       unsubscribe();
+      i18n.off('languageChanged', handleLanguageChange);
     };
   }, []);
+
+  // useEffect(() => {
+  //   const unsubscribe: any = notifee.onBackgroundEvent(
+  //     async ({type, detail}) => {
+  //       if (
+  //         type === EventType.ACTION_PRESS &&
+  //         detail.pressAction?.id === 'STOP_ALARM'
+  //       ) {
+  //         stopAlarm();
+  //         await notifee.cancelNotification(detail.notification?.id || '');
+  //       }
+  //     },
+  //   );
+
+  //   return () => {
+  //     unsubscribe();
+  //   };
+  // }, []);
 
   return (
     <PaperProvider theme={theme}>
